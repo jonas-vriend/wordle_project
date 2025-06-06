@@ -54,7 +54,7 @@ Once up and running, the app should print a link in the terminal (ie Running on 
 
 ## Project Structure
 ```t
-Misc/
+wordle_project/
 ├── wordle_app.py         # Flask app and backend logic
 ├── wordle_lists.py       # Valid guesses and possible answers taken from Wordle source
 ├── templates/
