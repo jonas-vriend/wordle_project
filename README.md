@@ -37,9 +37,9 @@ locally.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/jonas-vriend/projects.git
+git clone https://github.com/jonas-vriend/wordle_project.git
 ```
-### 2. Install dependencies
+### 2. Install required Python package
 ```bash
 pip install Flask
 ```
@@ -48,8 +48,7 @@ pip install Flask
 python wordle_app.py
 ```
 ### 4. Access the app
-Once up and running, the app should print a link in the terminal. Paste it into
-a web browser. 
+Once up and running, the app should print a link in the terminal (ie Running on http://127.0.0.1:5000). Paste it into your web browser. 
 
 ---
 
