@@ -78,7 +78,6 @@ def next_guess(remaining_answers):
     if not best_guesses:
         best_guesses = remaining_answers
     finalists = [w for w in best_guesses if w in remaining_answers] or best_guesses
-    print('Finalists:', finalists)
     return random.choice(finalists)
 
 
@@ -90,29 +89,28 @@ first_guess = 'TARSE'
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    print("Route triggered!")
     message = ""
     suggested_guess = first_guess if state["remaining_words"] == curated_words else ""
+
     if request.method == "POST":
         guess = request.form.get("guess", "").strip().lower()
         feedback = request.form.get("feedback", "").strip()
 
-        print("Flask received guess:", guess)
-        print("Flask received feedback:", feedback)
-
-        if len(guess) != 5 or not guess.isalpha():
-            message = "Invalid guess. Must be exactly 5 letters."
-        elif len(feedback) != 5 or any(c not in '012' for c in feedback):
-            message = "Invalid feedback. Must be 5 digits using 0, 1, or 2."
+        if guess not in possible_words:
+            message = "Invalid submission. Guess not in valid word list."
         else:
             score_formatted = list(feedback)
-            state["remaining_words"] = guess_eliminator(guess, score_formatted, state["remaining_words"])
-            if not state["remaining_words"]:
-                message = "No words remaining. Please check your input."
+            new_remaining_words = guess_eliminator(guess, score_formatted, state["remaining_words"])
+
+            if not new_remaining_words:
+                message = "Invalid submission. Feedback leaves no remaining answers"
             else:
-                suggested_guess = next_guess(state["remaining_words"])
-                message = f"Remaining words: {len(state['remaining_words'])}"
-    return render_template("index.html",
+                suggested_guess = next_guess(new_remaining_words)
+                message = f"Remaining words: {len(new_remaining_words)}"
+                state["remaining_words"] = new_remaining_words
+
+    return render_template(
+        "index.html",
         message=message,
         guess=suggested_guess,
         total_count=len(curated_words),
@@ -120,9 +118,9 @@ def index():
     )
 
 
+
 @app.route("/reset", methods=["POST"])
 def reset():
-    print("Resetting game state!")
     state["remaining_words"] = curated_words.copy()
     return ("", 204)
 
