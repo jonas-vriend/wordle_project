@@ -7,6 +7,18 @@ app = Flask(__name__)
 
 
 def score_wordle(guess, answer):
+    """
+    Given a guess and an answer, return score in the format: ['#','#','#','#','#']
+    - A score of 1 means the letter is correct and in the right position
+    - A score of 2 means the letter is present in the answer but in the wrong position
+    - A score of 0 means the letter is not present in the answer word
+
+    Input:
+        guess (str): A 5-letter guess the user submits
+        answer (str): The 5-letter answer of a given Wordle puzzle
+    Output (List[str]): A list representation of a Wordle feedback score with 0,1,2
+        representing gray, green, and yellow tiles respectively
+    """
     score = ['0'] * 5
     remaining = {}
     for i in range(5):
@@ -22,6 +34,17 @@ def score_wordle(guess, answer):
 
 
 def guess_eliminator(guess, score, possible):
+    """
+    Given a guess, feedback score, and bank of remaining possible answers, prune
+    candidate answers that do not adhere to the feedback score
+
+    Input:
+        guess (str): A 5-letter guess the user submits
+        score (List[str]): A list representation of a Wordle feedback score with 0,1,2
+            representing gray, green, and yellow tiles respectively
+        possible (List[str]): List of candidate answers 
+    Output (List[str]): Pruned list of candidate answers
+    """
     remaining = []
     required_counts = {}
     for i in range(5):
@@ -34,7 +57,7 @@ def guess_eliminator(guess, score, possible):
             c_letter = candidate[i]
             feedback = score[i]
             if feedback == '1':
-                if c_letter != g_letter:
+                if not c_letter == g_letter:
                     match = False
                     break
             elif feedback == '2':
@@ -54,6 +77,17 @@ def guess_eliminator(guess, score, possible):
 
 
 def next_guess(remaining_answers):
+    """
+    Given a list of remaining answers, find the next optimal guess using
+    entropy. If multiple guesses are tied for maximum entropy, guesses in the remaining
+    answers list are preferred. If multiple words in the remaining answers list
+    are tied, one is chosen at random.
+        
+    Input:
+        remaining_answers (List[str]): A list of remaining answers that have
+            been pruned to adhere to the most recent feedback score
+    Output (str): Optimal guess with maximum entropy or None if no answers remain
+    """
     if not remaining_answers:
         return None
     if len(remaining_answers) == 1:
@@ -89,6 +123,15 @@ first_guess = 'TARSE'
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    """
+    Main route for the Wordle Engine.
+
+    - On GET: renders the current board state with the suggested guess.
+    - On POST: receives a user guess and feedback, validates input, updates the
+      list of possible answers, and returns a new suggestion or an error message.
+
+    Output: Rendered HTML page with updated state and recommendation.
+    """
     message = ""
     suggested_guess = first_guess if state["remaining_words"] == curated_words else ""
 
@@ -121,6 +164,12 @@ def index():
 
 @app.route("/reset", methods=["POST"])
 def reset():
+    """
+    Resets the state of the app to the full curated word list.
+    Called via POST from the frontend when the user clicks the Reset button.
+
+    Output: Empty 204 response to signal frontend that reset is complete.
+    """
     state["remaining_words"] = curated_words.copy()
     return ("", 204)
 
