@@ -146,6 +146,7 @@
     </style>
   </head>
   <body>
+    <div id="message-box" style="display: none;">{{ message }}</div>
     <h1 class="logo">WORDLE ENGINE</h1>
     <div class="container">
       <div class="left-panel">
@@ -225,6 +226,8 @@
         } else if (e.key === 'Backspace' && currentTile > 0) {
           currentTile--;
           activeTiles[currentTile].textContent = '';
+        } else if (e.key === 'Enter' && currentTile === 5) {
+          submitButton.click();
         }
       });
 
@@ -294,6 +297,13 @@
           const html = await response.text();
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
+          const errorMessage = doc.getElementById("message-box")?.innerText;
+
+          if (errorMessage && (errorMessage.startsWith("Invalid"))) {
+            alert(errorMessage);
+            hideProgressBar();
+            return;
+          }
 
           const suggested = doc.getElementById('suggested-word')?.textContent.trim().toUpperCase() || '---';
           const remaining = doc.getElementById('remaining-count')?.textContent.trim().replace('Remaining words: ', '') || '----';
