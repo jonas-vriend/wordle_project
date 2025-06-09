@@ -21,22 +21,25 @@ def score_wordle(guess, answer):
     """
     score = ['0'] * 5
     remaining = {}
+
     for i in range(5):
         if guess[i] == answer[i]:
             score[i] = '1'
         else:
             remaining[answer[i]] = remaining.get(answer[i], 0) + 1
+
     for i in range(5):
         if score[i] == '0' and guess[i] in remaining and remaining[guess[i]] > 0:
             score[i] = '2'
             remaining[guess[i]] -= 1
+
     return score
 
 
 def guess_eliminator(guess, score, possible):
     """
     Given a guess, feedback score, and bank of remaining possible answers, prune
-    candidate answers that do not adhere to the feedback score
+    candidate answers that do not adhere to the feedback score.
 
     Input:
         guess (str): A 5-letter guess the user submits
@@ -47,9 +50,11 @@ def guess_eliminator(guess, score, possible):
     """
     remaining = []
     required_counts = {}
+
     for i in range(5):
         if score[i] in ('1', '2'):
             required_counts[guess[i]] = required_counts.get(guess[i], 0) + 1
+
     for candidate in possible:
         match = True
         for i in range(5):
@@ -71,8 +76,10 @@ def guess_eliminator(guess, score, possible):
                 elif g_letter not in required_counts and g_letter in candidate:
                     match = False
                     break
+
         if match:
             remaining.append(candidate)
+
     return remaining
 
 
@@ -90,8 +97,10 @@ def next_guess(remaining_answers):
     """
     if not remaining_answers:
         return None
+
     if len(remaining_answers) == 1:
         return remaining_answers[0]
+
     max_entropy = 0
     best_guesses = []
     denominator = len(remaining_answers)
@@ -109,9 +118,12 @@ def next_guess(remaining_answers):
             best_guesses = [candidate]
         elif ent == max_entropy:
             best_guesses.append(candidate)
+
     if not best_guesses:
         best_guesses = remaining_answers
+
     finalists = [w for w in best_guesses if w in remaining_answers] or best_guesses
+
     return random.choice(finalists)
 
 
@@ -130,7 +142,7 @@ def index():
     - On POST: receives a user guess and feedback, validates input, updates the
       list of possible answers, and returns a new suggestion or an error message.
 
-    Output: Rendered HTML page with updated state and recommendation.
+    Output: Rendered HTML page with updated state and recommendation
     """
     message = ""
     suggested_guess = first_guess if state["remaining_words"] == curated_words else ""
@@ -168,7 +180,7 @@ def reset():
     Resets the state of the app to the full curated word list.
     Called via POST from the frontend when the user clicks the Reset button.
 
-    Output: Empty 204 response to signal frontend that reset is complete.
+    Output: Empty 204 response to signal frontend that reset is complete
     """
     state["remaining_words"] = curated_words.copy()
     return ("", 204)

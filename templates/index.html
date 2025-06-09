@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Metadata and mobile responsiveness -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    
+    <!-- Page title and font -->
     <title>Wordle Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet">
+    
+    <!-- CSS Styling -->
     <style>
+      /* General layout and dark theme */
       body {
         background-color: #121213;
         color: white;
@@ -31,6 +37,7 @@
         gap: 50px;
       }
 
+      /* Left panel: game board */
       .left-panel {
         display: flex;
         flex-direction: column;
@@ -49,6 +56,7 @@
         gap: 10px;
       }
 
+      /* Tile styles */
       .tile {
         width: 60px;
         height: 60px;
@@ -63,21 +71,11 @@
         cursor: pointer;
       }
 
-      .green {
-        background-color: #538d4e !important;
-        border-color: #538d4e !important;
-      }
+      .green { background-color: #538d4e !important; border-color: #538d4e !important; }
+      .yellow { background-color: #b59f3b !important; border-color: #b59f3b !important; }
+      .gray { background-color: #3a3a3c !important; border-color: #3a3a3c !important; }
 
-      .yellow {
-        background-color: #b59f3b !important;
-        border-color: #b59f3b !important;
-      }
-
-      .gray {
-        background-color: #3a3a3c !important;
-        border-color: #3a3a3c !important;
-      }
-
+      /* Buttons */
       .button-row {
         display: flex;
         gap: 20px;
@@ -96,18 +94,11 @@
         cursor: pointer;
       }
 
-      .submit-button:hover {
-        background-color: #6aaa64;
-      }
+      .submit-button:hover { background-color: #6aaa64; }
+      .submit-button.reset { background-color: #b00020; }
+      .submit-button.reset:hover { background-color: #d32f2f; }
 
-      .submit-button.reset {
-        background-color: #b00020;
-      }
-
-      .submit-button.reset:hover {
-        background-color: #d32f2f;
-      }
-
+      /* Info panel on the right */
       .info-box {
         background-color: #202124;
         border: 2px solid #3a3a3c;
@@ -118,9 +109,7 @@
         align-self: flex-start;
       }
 
-      .info-box p {
-        margin: 8px 0;
-      }
+      .info-box p { margin: 8px 0; }
 
       .submit-button:disabled {
         background-color: transparent;
@@ -130,6 +119,7 @@
         opacity: 1;
       }
 
+      /* Word list display */
       .word-list {
         margin-top: 12px;
         max-height: 200px;
@@ -140,55 +130,64 @@
         line-height: 1.4;
       }
 
-      .word-item {
-        white-space: nowrap;
-      }
+      .word-item { white-space: nowrap; }
     </style>
   </head>
+
   <body>
+    <!-- Flask injects message (error/warning) here -->
     <div id="message-box" style="display: none;">{{ message }}</div>
+
     <h1 class="logo">WORDLE ENGINE</h1>
+
     <div class="container">
+      <!-- Left Panel: Wordle game board -->
       <div class="left-panel">
         <div class="board" id="board">
           {% for i in range(6) %}
             <div class="row">
               {% for j in range(5) %}
+                <!-- First row is enabled initially -->
                 <div class="tile gray" data-enabled="{{ 'true' if i == 0 else 'false' }}"></div>
               {% endfor %}
             </div>
           {% endfor %}
         </div>
+
+        <!-- Submit and Reset Buttons -->
         <div class="button-row">
           <button class="submit-button" id="submit-button">Submit</button>
           <button class="submit-button reset" id="reset-button">Reset</button>
         </div>
       </div>
 
+      <!-- Right Panel: Info, recommended guess, word list -->
       <div class="info-box">
         <p><strong>Recommended Guess:</strong> <span id="suggested-word">{{ guess.upper() if guess else '---' }}</span></p>
         <p><strong>Words Remaining:</strong> <span id="remaining-count">{{ message.split(':')[-1].strip() if 'Remaining words:' in message else total_count }}</span></p>
-        
+
+        <!-- Word list displayed from backend -->
         <div class="word-list" id="word-list">
           {% for word in remaining_words %}
             <div class="word-item">{{ word.upper() }}</div>
           {% endfor %}
         </div>
 
-        <!-- Progress bar -->
+        <!-- Progress bar animation -->
         <div id="progress-bar-container" style="margin-top: 16px; width: 100%; display: none;">
           <div id="progress-bar" style="width: 0%; height: 8px; background-color: #6aaa64; transition: width 0.2s ease;"></div>
         </div>
       </div>
     </div>
 
+    <!-- JavaScript functionality -->
     <script>
+      // DOM references
       const board = document.getElementById('board');
       const submitButton = document.getElementById('submit-button');
       const resetButton = document.getElementById('reset-button');
       const suggestedWord = document.getElementById('suggested-word');
       const remainingCount = document.getElementById('remaining-count');
-
       const progressBarContainer = document.getElementById('progress-bar-container');
       const progressBar = document.getElementById('progress-bar');
       let progressInterval;
@@ -205,6 +204,7 @@
       let currentRow = 0;
       let currentTile = 0;
 
+      // Enable only the current row
       function updateTileAccess() {
         const allRows = document.querySelectorAll('.row');
         allRows.forEach((row, i) => {
@@ -216,6 +216,7 @@
 
       updateTileAccess();
 
+      // Keyboard input handler
       document.addEventListener('keydown', e => {
         const activeRow = board.children[currentRow];
         const activeTiles = activeRow.querySelectorAll('.tile');
@@ -227,10 +228,11 @@
           currentTile--;
           activeTiles[currentTile].textContent = '';
         } else if (e.key === 'Enter' && currentTile === 5) {
-          submitButton.click();
+          submitButton.click();  // Submit on Enter
         }
       });
 
+      // Tile color rotation on click: gray → yellow → green → gray
       document.querySelectorAll('.tile').forEach(tile => {
         tile.addEventListener('click', () => {
           if (tile.getAttribute('data-enabled') !== 'true') return;
@@ -247,6 +249,7 @@
         });
       });
 
+      // Reset button: POSTs to Flask reset route and reloads
       resetButton.addEventListener('click', async () => {
         try {
           await fetch('/reset', { method: 'POST' });
@@ -256,6 +259,7 @@
         }
       });
 
+      // Submit button logic
       submitButton.addEventListener('click', async () => {
         const activeRow = board.children[currentRow];
         const tiles = activeRow.querySelectorAll('.tile');
@@ -277,7 +281,7 @@
         }
 
         try {
-
+          // Animate progress bar while Flask processes
           progressBarContainer.style.display = 'block';
           progressBar.style.width = '5%';
           let width = 5;
@@ -288,26 +292,28 @@
             }
           }, 200);
 
+          // POST guess + feedback to Flask
           const response = await fetch('/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({ guess, feedback })
           });
 
+          // Parse returned HTML and look for error
           const html = await response.text();
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
           const errorMessage = doc.getElementById("message-box")?.innerText;
 
           if (errorMessage && (errorMessage.startsWith("Invalid"))) {
-            alert(errorMessage);
+            alert(errorMessage);  // Show alert for feedback/guess errors
             hideProgressBar();
             return;
           }
 
+          // Update UI with new recommended word and word list
           const suggested = doc.getElementById('suggested-word')?.textContent.trim().toUpperCase() || '---';
           const remaining = doc.getElementById('remaining-count')?.textContent.trim().replace('Remaining words: ', '') || '----';
-
           suggestedWord.textContent = suggested;
           remainingCount.textContent = remaining;
 
@@ -318,6 +324,7 @@
             wordListContainer.appendChild(wordDiv.cloneNode(true));
           });
 
+          // Auto-fill final row if only 1 word left
           if (remaining === '1' && currentRow < 5) {
             const nextRow = board.children[currentRow + 1];
             const nextTiles = nextRow.querySelectorAll('.tile');
@@ -334,6 +341,7 @@
             return;
           }
 
+          // End if out of rows
           if (currentRow >= 5) {
             hideProgressBar();
             suggestedWord.textContent = "---";
@@ -342,6 +350,7 @@
             return;
           }
 
+          // Move to next row
           const rowTiles = board.children[currentRow].querySelectorAll('.tile');
           rowTiles.forEach(tile => tile.setAttribute('data-enabled', 'false'));
           currentRow++;
